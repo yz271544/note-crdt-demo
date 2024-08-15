@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时协作编辑</title>
+</head>
+<body>
+<h1>实时协作编辑</h1>
+<textarea id="editor" rows="10" cols="50"></textarea>
+
+<script>
+    const articleID = "A"; // 假设当前编辑的文章ID为"A"
+    const editor = document.getElementById('editor');
+    const socket = new WebSocket(`ws://localhost:8080/ws?article_id=${articleID}`);
+
+    // 当接收到消息时，更新编辑器内容
+    socket.onmessage = function(event) {
+        const message = JSON.parse(event.data);
+        if (message.article_id === articleID) { // 检查消息是否属于当前文章
+            editor.value = message.content;
+        }
+    };
+
+    // 当编辑器内容改变时，发送消息给服务器
+    editor.addEventListener('input', () => {
+        const message = {
+            article_id: articleID,
+            content: editor.value
+        };
+        socket.send(JSON.stringify(message));
+    });
+
+    socket.onopen = function() {
+        console.log('连接已建立');
+    };
+
+    socket.onclose = function() {
+        console.log('连接已关闭');
+    };
+</script>
+</body>
+</html>
